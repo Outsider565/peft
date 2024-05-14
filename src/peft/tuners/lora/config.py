@@ -147,6 +147,14 @@ class LoraConfig(PeftConfig):
             )
         },
     )
+    use_stable_lora: bool = field(
+        default=False,
+        metadata={
+            "help": (
+               "Use stable lora"
+            )
+        },
+    )
     modules_to_save: Optional[list[str]] = field(
         default=None,
         metadata={

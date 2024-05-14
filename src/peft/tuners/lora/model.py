@@ -194,6 +194,7 @@ class LoraModel(BaseTuner):
             "fan_in_fan_out": lora_config.fan_in_fan_out,
             "init_lora_weights": lora_config.init_lora_weights,
             "use_rslora": lora_config.use_rslora,
+            "use_stable_lora": lora_config.use_stable_lora,
             "use_dora": lora_config.use_dora,
             "loaded_in_8bit": getattr(self.model, "is_loaded_in_8bit", False),
             "loaded_in_4bit": getattr(self.model, "is_loaded_in_4bit", False),
@@ -216,6 +217,7 @@ class LoraModel(BaseTuner):
                 lora_dropout=lora_config.lora_dropout,
                 init_lora_weights=lora_config.init_lora_weights,
                 use_rslora=lora_config.use_rslora,
+                use_stable_lora=lora_config.use_stable_lora,
                 use_dora=lora_config.use_dora,
             )
         else:

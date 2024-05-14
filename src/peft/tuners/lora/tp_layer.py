@@ -15,6 +15,7 @@
 import importlib
 import warnings
 from typing import Any, Optional
+import math
 
 import torch
 import torch.nn as nn
@@ -44,6 +45,7 @@ class LoraParallelLinear(nn.Module, LoraLayer):
         fan_in_fan_out: bool = False,
         init_lora_weights: bool = True,
         use_rslora: bool = False,
+        use_stable_lora: bool = False,
         use_dora: bool = False,
         **kwargs,
     ):
@@ -76,6 +78,7 @@ class LoraParallelLinear(nn.Module, LoraLayer):
             lora_dropout=lora_dropout,
             init_lora_weights=init_lora_weights,
             use_rslora=use_rslora,
+            use_stable_lora=use_stable_lora,
             use_dora=use_dora,
             init_method=init_method,
             input_is_parallel=input_is_parallel,
@@ -93,6 +96,7 @@ class LoraParallelLinear(nn.Module, LoraLayer):
         lora_dropout,
         init_lora_weights,
         use_rslora,
+        use_stable_lora,
         use_dora=False,
         init_method=init.xavier_normal_,
         input_is_parallel=True,
@@ -138,6 +142,8 @@ class LoraParallelLinear(nn.Module, LoraLayer):
         self.lora_B[adapter_name] = lora_b
         if use_rslora:
             self.scaling[adapter_name] = lora_alpha / (r**0.5)
+        elif use_stable_lora:
+            self.scaling[adapter_name] = lora_alpha * math.sqrt(r / math.sqrt(self.in_features * self.out_features))
         else:
             self.scaling[adapter_name] = lora_alpha / r
         if init_lora_weights:

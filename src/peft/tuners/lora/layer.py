@@ -90,7 +90,7 @@ class LoraLayer(BaseTunerLayer):
         self.out_features = out_features
 
     def update_layer(
-        self, adapter_name, r, lora_alpha, lora_dropout, init_lora_weights, use_rslora, use_dora: bool = False
+        self, adapter_name, r, lora_alpha, lora_dropout, init_lora_weights, use_rslora, use_stable_lora, use_dora: bool = False
     ):
         # This code works for linear layers, override for other layer types
         if r <= 0:
@@ -109,6 +109,8 @@ class LoraLayer(BaseTunerLayer):
         self.lora_B[adapter_name] = nn.Linear(r, self.out_features, bias=False)
         if use_rslora:
             self.scaling[adapter_name] = lora_alpha / math.sqrt(r)
+        elif use_stable_lora:
+            self.scaling[adapter_name] = lora_alpha * math.sqrt(r / math.sqrt(self.in_features * self.out_features))
         else:
             self.scaling[adapter_name] = lora_alpha / r
 
@@ -370,6 +372,7 @@ class Linear(nn.Module, LoraLayer):
         is_target_conv_1d_layer: bool = False,
         init_lora_weights: Union[bool, str] = True,
         use_rslora: bool = False,
+        use_stable_lora: bool = False,
         use_dora: bool = False,
         **kwargs,
     ) -> None:
@@ -385,6 +388,7 @@ class Linear(nn.Module, LoraLayer):
             lora_dropout=lora_dropout,
             init_lora_weights=init_lora_weights,
             use_rslora=use_rslora,
+            use_stable_lora=use_stable_lora,
             use_dora=use_dora,
         )
         self.is_target_conv_1d_layer = is_target_conv_1d_layer
@@ -562,6 +566,7 @@ class Embedding(nn.Module, LoraLayer):
         lora_dropout: float = 0.0,
         init_lora_weights: Union[bool, str] = True,
         use_rslora: bool = False,
+        use_stable_lora: bool = False,
         use_dora: bool = False,
         **kwargs,
     ) -> None:
@@ -579,10 +584,11 @@ class Embedding(nn.Module, LoraLayer):
             lora_dropout=lora_dropout,
             init_lora_weights=init_lora_weights,
             use_rslora=use_rslora,
+            use_stable_lora=use_stable_lora,
             use_dora=use_dora,
         )
 
-    def update_layer(self, adapter_name, r, lora_alpha, lora_dropout, init_lora_weights, use_rslora, use_dora):
+    def update_layer(self, adapter_name, r, lora_alpha, lora_dropout, init_lora_weights, use_rslora, use_stable_lora, use_dora):
         if r <= 0:
             raise ValueError(f"`r` should be a positive integer value but the value passed is {r}")
 
@@ -601,6 +607,8 @@ class Embedding(nn.Module, LoraLayer):
         self.lora_embedding_B[adapter_name] = nn.Parameter(weight_B)
         if use_rslora:
             self.scaling[adapter_name] = lora_alpha / math.sqrt(r)
+        elif use_stable_lora:
+            self.scaling[adapter_name] = lora_alpha * math.sqrt(r / math.sqrt(self.in_features * self.out_features))
         else:
             self.scaling[adapter_name] = lora_alpha / r
 
